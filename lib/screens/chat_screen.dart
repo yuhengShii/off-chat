@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/ble_connection_state.dart';
 import '../providers/ble_provider.dart';
 import '../providers/chat_provider.dart';
 import '../widgets/message_bubble.dart';
@@ -64,6 +65,34 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
+          Consumer<BleProvider>(
+            builder: (context, provider, child) {
+              if (!provider.isConnected && provider.connectionState != BleConnectionState.connecting) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  color: Colors.orange.shade100,
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber, color: Colors.orange.shade800, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '连接已断开',
+                          style: TextStyle(color: Colors.orange.shade800),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('返回'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           Expanded(
             child: Consumer<ChatProvider>(
               builder: (context, chatProvider, child) {

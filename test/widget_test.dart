@@ -61,7 +61,7 @@ void main() {
 
   group('DeviceInfo', () {
     test('creates device info correctly', () {
-      final device = DeviceInfo(
+      const device = DeviceInfo(
         id: 'abc123',
         name: 'Test Device',
         rssi: -50,
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('copyWith works correctly', () {
-      final device = DeviceInfo(
+      const device = DeviceInfo(
         id: 'abc123',
         name: 'Test Device',
         rssi: -50,
@@ -86,9 +86,9 @@ void main() {
     });
 
     test('equality works correctly', () {
-      final device1 = DeviceInfo(id: 'abc', name: 'Device A', rssi: -50);
-      final device2 = DeviceInfo(id: 'abc', name: 'Device B', rssi: -60);
-      final device3 = DeviceInfo(id: 'xyz', name: 'Device A', rssi: -50);
+      const device1 = DeviceInfo(id: 'abc', name: 'Device A', rssi: -50);
+      const device2 = DeviceInfo(id: 'abc', name: 'Device B', rssi: -60);
+      const device3 = DeviceInfo(id: 'xyz', name: 'Device A', rssi: -50);
 
       expect(device1 == device2, true);
       expect(device1 == device3, false);

@@ -57,6 +57,18 @@ class _MessageInputState extends State<MessageInput> {
       child: SafeArea(
         child: Row(
           children: [
+            IconButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('语音消息功能正在开发中'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.mic),
+              tooltip: '语音消息（预留）',
+            ),
             Expanded(
               child: TextField(
                 controller: _controller,
