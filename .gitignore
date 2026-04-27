@@ -30,5 +30,38 @@ render.experimental.xml
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 
+# Claude Code
+CLAUDE.local.md
+
 # Android Profiling
 *.hprof
+
+# Flutter
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/ServiceDefinitions.json
+
+# macOS
+macos/Flutter/Flutter.framework
+macos/Flutter/Flutter.podspec
+
+# Windows
+windows/flutter/ephemeral/
+windows/runner/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Test
+build/test_cache/
+build/unit_test_assets/
