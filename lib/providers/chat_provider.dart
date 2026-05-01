@@ -7,9 +7,20 @@ class ChatProvider extends ChangeNotifier {
   final MessageService _messageService = MessageService();
 
   final List<ChatMessage> _messages = [];
+  int _unreadCount = 0;
+  bool _isChatActive = false;
   StreamSubscription? _dataSubscription;
 
   List<ChatMessage> get messages => List.unmodifiable(_messages);
+  int get unreadCount => _unreadCount;
+
+  void setChatActive(bool active) {
+    _isChatActive = active;
+    if (active) {
+      _unreadCount = 0;
+    }
+    notifyListeners();
+  }
 
   void setDataStream(Stream<Uint8List> dataStream) {
     _dataSubscription?.cancel();
@@ -20,6 +31,9 @@ class ChatProvider extends ChangeNotifier {
     final message = _messageService.decodeMessage(data);
     if (message != null) {
       _messages.add(message);
+      if (!_isChatActive) {
+        _unreadCount++;
+      }
       notifyListeners();
     }
   }
@@ -53,6 +67,7 @@ class ChatProvider extends ChangeNotifier {
 
   void clearMessages() {
     _messages.clear();
+    _unreadCount = 0;
     notifyListeners();
   }
 

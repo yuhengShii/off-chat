@@ -122,10 +122,17 @@ class _HandshakeHandlerState extends State<_HandshakeHandler> {
   }
 
   void _navigateToChat() {
-    context.read<ChatProvider>().clearMessages();
-    widget.navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => const ChatScreen()),
-    );
+    final chatProvider = context.read<ChatProvider>();
+    chatProvider.clearMessages();
+    chatProvider.setChatActive(true);
+    final navState = widget.navigatorKey.currentState;
+    if (navState != null) {
+      navState.push(
+        MaterialPageRoute(builder: (_) => const ChatScreen()),
+      ).then((_) {
+        chatProvider.setChatActive(false);
+      });
+    }
   }
 
   void _showRejectedSnackBar() {

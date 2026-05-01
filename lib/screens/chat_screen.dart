@@ -26,8 +26,9 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bleProvider = context.read<BleProvider>();
-      final chatProvider = context.read<ChatProvider>();
-      chatProvider.setDataStream(bleProvider.dataStream);
+      context.read<ChatProvider>()
+        ..setChatActive(true)
+        ..setDataStream(bleProvider.dataStream);
     });
   }
 

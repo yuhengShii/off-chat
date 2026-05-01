@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ble_provider.dart';
+import '../providers/chat_provider.dart';
 import '../models/ble_connection_state.dart';
 import 'scan_screen.dart';
 import 'chat_screen.dart';
@@ -145,15 +146,26 @@ class HomeScreen extends StatelessWidget {
   Widget _buildConnectedActions(BuildContext context, BleProvider provider) {
     return Column(
       children: [
-        FilledButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ChatScreen()),
+        Consumer<ChatProvider>(
+          builder: (context, chatProvider, child) {
+            return Badge(
+              isLabelVisible: chatProvider.unreadCount > 0,
+              label: Text('${chatProvider.unreadCount}'),
+              child: FilledButton.icon(
+                onPressed: () {
+                  chatProvider.setChatActive(true);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ChatScreen()),
+                  ).then((_) {
+                    chatProvider.setChatActive(false);
+                  });
+                },
+                icon: const Icon(Icons.chat),
+                label: const Text('进入聊天'),
+              ),
             );
           },
-          icon: const Icon(Icons.chat),
-          label: const Text('进入聊天'),
         ),
         const SizedBox(height: 16),
         OutlinedButton.icon(
