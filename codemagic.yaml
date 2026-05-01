@@ -1,0 +1,21 @@
+workflows:
+  ios:
+    name: iOS Build
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+    scripts:
+      - flutter pub get
+      - cd ios && pod install && cd ..
+      - flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+    publishing:
+      email:
+        recipients:
+          - example@email.com
