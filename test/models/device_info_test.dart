@@ -110,5 +110,27 @@ void main() {
 
       expect(device.rssi, -30);
     });
+
+    test('equal to itself (identical)', () {
+      expect(baseDevice == baseDevice, true);
+      expect(baseDevice.hashCode, baseDevice.hashCode);
+    });
+
+    test('not equal to null', () {
+      // ignore: unnecessary_null_comparison
+      expect(baseDevice == null, false);
+    });
+
+    test('not equal to non-DeviceInfo object', () {
+      // ignore: unrelated_type_equality_checks
+      expect(baseDevice == 'some string', false);
+      // ignore: unrelated_type_equality_checks
+      expect(baseDevice == 123, false);
+    });
+
+    test('hashCode matches for equal devices', () {
+      const same = DeviceInfo(id: 'aa:bb:cc:dd:ee:ff', name: 'Different', rssi: -99);
+      expect(baseDevice.hashCode, same.hashCode);
+    });
   });
 }

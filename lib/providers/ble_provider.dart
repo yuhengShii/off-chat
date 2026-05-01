@@ -12,9 +12,9 @@ import '../models/device_info.dart';
 enum HandshakePhase { none, waiting, incoming, accepted, rejected }
 
 class BleProvider extends ChangeNotifier {
-  final BluetoothService _bluetoothService = BluetoothService();
-  final BluetoothDeviceService _deviceService = BluetoothDeviceService();
-  final BlePeripheralService _peripheralService = BlePeripheralService();
+  final BluetoothService _bluetoothService;
+  final BluetoothDeviceService _deviceService;
+  final BlePeripheralService _peripheralService;
 
   BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
   BleConnectionState _connectionState = BleConnectionState.disconnected;
@@ -56,7 +56,13 @@ class BleProvider extends ChangeNotifier {
   String get deviceName => _deviceName;
   Stream<Uint8List> get dataStream => _incomingDataController.stream;
 
-  BleProvider() {
+  BleProvider({
+    BluetoothService? bluetoothService,
+    BluetoothDeviceService? deviceService,
+    BlePeripheralService? peripheralService,
+  })  : _bluetoothService = bluetoothService ?? BluetoothService(),
+        _deviceService = deviceService ?? BluetoothDeviceService(),
+        _peripheralService = peripheralService ?? BlePeripheralService() {
     _init();
     _initPeripheral();
     _initDataMerge();

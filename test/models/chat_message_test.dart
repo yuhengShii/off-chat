@@ -117,6 +117,29 @@ void main() {
       expect(message.voiceDuration, isNull);
     });
 
+    test('copyWith can set voice fields', () {
+      final message = createMessage();
+      final updated = message.copyWith(
+        voicePath: '/audio/new.mp3',
+        voiceDuration: 5000,
+      );
+
+      expect(updated.voicePath, '/audio/new.mp3');
+      expect(updated.voiceDuration, 5000);
+      expect(updated.content, message.content);
+    });
+
+    test('copyWith preserves voice fields when not specified', () {
+      final message = createMessage(
+        voicePath: '/audio/old.mp3',
+        voiceDuration: 3000,
+      );
+      final updated = message.copyWith(content: 'new content');
+
+      expect(updated.voicePath, '/audio/old.mp3');
+      expect(updated.voiceDuration, 3000);
+    });
+
     test('supports Chinese content', () {
       final message = createMessage(content: '你好世界');
 

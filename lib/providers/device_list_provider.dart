@@ -4,7 +4,7 @@ import '../models/device_info.dart';
 import '../services/bluetooth_service.dart';
 
 class DeviceListProvider extends ChangeNotifier {
-  final BluetoothService _bluetoothService = BluetoothService();
+  final BluetoothService _bluetoothService;
 
   List<DeviceInfo> _devices = [];
   String? _errorMessage;
@@ -14,7 +14,8 @@ class DeviceListProvider extends ChangeNotifier {
   bool get isScanning => _bluetoothService.isScanning;
   String? get errorMessage => _errorMessage;
 
-  DeviceListProvider() {
+  DeviceListProvider({BluetoothService? bluetoothService})
+      : _bluetoothService = bluetoothService ?? BluetoothService() {
     _init();
   }
 

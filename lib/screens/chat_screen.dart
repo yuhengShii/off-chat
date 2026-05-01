@@ -18,10 +18,12 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final MessageService _messageService = MessageService();
+  bool _isNearBottom = true;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bleProvider = context.read<BleProvider>();
       final chatProvider = context.read<ChatProvider>();
@@ -31,16 +33,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    const threshold = 100.0;
+    _isNearBottom = _scrollController.position.maxScrollExtent -
+            _scrollController.position.pixels <=
+        threshold;
+  }
+
+  void _scrollToBottom({bool animated = true}) {
+    if (!_scrollController.hasClients) return;
+    if (animated) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
+      );
+    } else {
+      _scrollController.jumpTo(
+        _scrollController.position.maxScrollExtent,
       );
     }
   }
@@ -111,6 +127,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   return const Center(
                     child: Text('开始聊天吧'),
                   );
+                }
+
+                if (_isNearBottom && messages.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollToBottom(animated: false);
+                  });
                 }
 
                 return ListView.builder(

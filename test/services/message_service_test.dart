@@ -208,6 +208,185 @@ void main() {
       ));
       expect(result, isNull);
     });
+
+    test('returns null for null bytes', () {
+      final result = service.decodeMessage(Uint8List.fromList([0, 0, 0, 0]));
+      expect(result, isNull);
+    });
+
+    test('returns null for UTF-8 BOM prefix', () {
+      final result = service.decodeMessage(Uint8List.fromList(
+        [0xEF, 0xBB, 0xBF, ...utf8.encode('{"id":"abc"}')],
+      ));
+      expect(result, isNull);
+    });
+  });
+
+  group('content with special characters', () {
+    test('content with double quotes', () {
+      final original = service.createTextMessage(
+        content: '他说"你好"',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, '他说"你好"');
+    });
+
+    test('content with backslashes', () {
+      final original = service.createTextMessage(
+        content: 'path\\to\\file',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, 'path\\to\\file');
+    });
+
+    test('content with control characters', () {
+      final original = service.createTextMessage(
+        content: 'Line1\nLine2\r\nTab\tEnd',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, 'Line1\nLine2\r\nTab\tEnd');
+    });
+
+    test('content with only whitespace', () {
+      final original = service.createTextMessage(
+        content: '   ',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, '   ');
+    });
+
+    test('content with JSON-like text', () {
+      final original = service.createTextMessage(
+        content: '{"key": "value"} is not JSON but text',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, '{"key": "value"} is not JSON but text');
+    });
+
+    test('content with HTML tags', () {
+      final original = service.createTextMessage(
+        content: '<b>bold</b> & "quotes"',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, '<b>bold</b> & "quotes"');
+    });
+  });
+
+  group('large messages', () {
+    test('message at 400 bytes', () {
+      final content = 'A' * 400;
+      final original = service.createTextMessage(content: content, isFromMe: true);
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content.length, 400);
+    });
+
+    test('long Chinese message', () {
+      final content = '你好' * 100; // 200 chars = 600 UTF-8 bytes
+      final original = service.createTextMessage(content: content, isFromMe: true);
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content.length, 200);
+      expect(decoded.content, content);
+    });
+
+    test('mixed content at max practical size', () {
+      final content = 'Hello你好😀' * 30; // 150 chars
+      final original = service.createTextMessage(content: content, isFromMe: true);
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, content);
+    });
+  });
+
+  group('field preservation', () {
+    test('all fields survive encode/decode cycle', () async {
+      final original = service.createTextMessage(
+        content: 'Preserve all the things!',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+
+      expect(decoded, isNotNull);
+      expect(decoded!.id, original.id);
+      expect(decoded.content, original.content);
+      expect(decoded.type, original.type);
+      expect(decoded.timestamp.millisecondsSinceEpoch,
+          original.timestamp.millisecondsSinceEpoch);
+      // isFromMe is always false after decode (received from remote)
+      expect(decoded.isFromMe, false);
+      expect(decoded.status, MessageStatus.delivered);
+    });
+
+    test('multiple encode/decode cycles produce same result', () {
+      final original = service.createTextMessage(
+        content: 'Stable across cycles',
+        isFromMe: true,
+      );
+
+      // Encode/decode multiple times
+      var data = service.encodeMessage(original);
+      for (int i = 0; i < 5; i++) {
+        final decoded = service.decodeMessage(data);
+        expect(decoded, isNotNull);
+        expect(decoded!.content, 'Stable across cycles');
+        // Re-encode and decode again
+        data = service.encodeMessage(decoded);
+      }
+
+      final finalDecoded = service.decodeMessage(data);
+      expect(finalDecoded, isNotNull);
+      expect(finalDecoded!.content, 'Stable across cycles');
+    });
+  });
+
+  group('JSON with extra fields', () {
+    test('ignores unknown fields', () {
+      final original = service.createTextMessage(
+        content: 'Extra fields test',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final jsonString = utf8.decode(encoded);
+      // Add unknown field
+      final modified = jsonString.replaceFirst('}', ', "unknown_field": "value"}');
+      final decoded = service.decodeMessage(utf8.encode(modified));
+      expect(decoded, isNotNull);
+      expect(decoded!.content, 'Extra fields test');
+    });
+
+    test('handles numeric content string', () {
+      final original = service.createTextMessage(
+        content: '12345',
+        isFromMe: true,
+      );
+      final encoded = service.encodeMessage(original);
+      final decoded = service.decodeMessage(encoded);
+      expect(decoded, isNotNull);
+      expect(decoded!.content, '12345');
+    });
   });
 
   group('generateMessageId', () {
