@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ble_connection_state.dart';
+import '../models/chat_message.dart';
 import '../providers/ble_provider.dart';
 import '../providers/chat_provider.dart';
+import '../services/message_service.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/message_input.dart';
 
@@ -15,6 +17,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
+  final MessageService _messageService = MessageService();
 
   @override
   void initState() {
@@ -49,7 +52,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final sent = await chatProvider.sendTextMessage(content);
     if (sent) {
       _scrollToBottom();
-      await bleProvider.sendMessage(content);
+      final messages = chatProvider.messages;
+      if (messages.isNotEmpty) {
+        final lastMsg = messages.last;
+        final encoded = _messageService.encodeMessage(lastMsg);
+        final delivered = await bleProvider.sendMessage(encoded);
+        chatProvider.updateMessageStatus(lastMsg.id, delivered ? MessageStatus.delivered : MessageStatus.failed);
+      }
     }
   }
 

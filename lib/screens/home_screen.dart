@@ -33,7 +33,9 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildConnectionStatus(bleProvider),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                _buildDeviceName(context, bleProvider),
+                const SizedBox(height: 16),
                 if (bleProvider.isConnected)
                   _buildConnectedActions(context, bleProvider)
                 else
@@ -82,6 +84,64 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildDeviceName(BuildContext context, BleProvider provider) {
+    return GestureDetector(
+      onTap: () => _showEditDeviceNameDialog(context, provider),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.devices, size: 18, color: Colors.grey.shade600),
+            const SizedBox(width: 8),
+            Text(
+              provider.deviceName,
+              style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.edit, size: 14, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditDeviceNameDialog(BuildContext context, BleProvider provider) {
+    final controller = TextEditingController(text: provider.deviceName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('修改设备名'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '输入设备名',
+            border: OutlineInputBorder(),
+          ),
+          maxLength: 20,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () {
+              provider.setDeviceName(controller.text);
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildConnectedActions(BuildContext context, BleProvider provider) {
     return Column(
       children: [
@@ -106,15 +166,31 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildDisconnectedActions(BuildContext context, BleProvider provider) {
-    return FilledButton.icon(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ScanScreen()),
-        );
-      },
-      icon: const Icon(Icons.bluetooth_searching),
-      label: const Text('扫描设备'),
+    return Column(
+      children: [
+        FilledButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ScanScreen()),
+            );
+          },
+          icon: const Icon(Icons.bluetooth_searching),
+          label: const Text('扫描设备'),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () {
+            if (provider.isAdvertising) {
+              provider.stopAdvertising();
+            } else {
+              provider.startAdvertising();
+            }
+          },
+          icon: Icon(provider.isAdvertising ? Icons.visibility_off : Icons.visibility),
+          label: Text(provider.isAdvertising ? '停止可见' : '设为可见'),
+        ),
+      ],
     );
   }
 }

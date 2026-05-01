@@ -9,8 +9,8 @@ class BleConstants {
   static const String rxCharacteristicUuid = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
   // 扫描参数
-  static const Duration scanDuration = Duration(seconds: 10);
-  static const Duration connectionTimeout = Duration(seconds: 15);
+  static const Duration scanDuration = Duration(seconds: 15);
+  static const Duration connectionTimeout = Duration(seconds: 30);
 
   // 重连参数
   static const int maxReconnectAttempts = 3;

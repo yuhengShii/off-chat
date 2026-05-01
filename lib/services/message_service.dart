@@ -19,12 +19,12 @@ class MessageService {
       if (message.voiceDuration != null) 'voiceDuration': message.voiceDuration,
     };
     final jsonString = jsonEncode(data);
-    return Uint8List.fromList(jsonString.codeUnits);
+    return Uint8List.fromList(utf8.encode(jsonString));
   }
 
   ChatMessage? decodeMessage(Uint8List data) {
     try {
-      final jsonString = String.fromCharCodes(data);
+      final jsonString = utf8.decode(data);
       final dataMap = jsonDecode(jsonString) as Map<String, dynamic>;
       return ChatMessage(
         id: dataMap['id'] as String,

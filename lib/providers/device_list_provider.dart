@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/device_info.dart';
-import '../services/ble_service.dart';
+import '../services/bluetooth_service.dart';
 
 class DeviceListProvider extends ChangeNotifier {
-  final BleService _bleService = BleService();
+  final BluetoothService _bluetoothService = BluetoothService();
 
   List<DeviceInfo> _devices = [];
-  bool _isScanning = false;
   String? _errorMessage;
   StreamSubscription? _scanSub;
 
   List<DeviceInfo> get devices => _devices;
-  bool get isScanning => _isScanning;
+  bool get isScanning => _bluetoothService.isScanning;
   String? get errorMessage => _errorMessage;
 
   DeviceListProvider() {
@@ -20,7 +19,7 @@ class DeviceListProvider extends ChangeNotifier {
   }
 
   void _init() {
-    _scanSub = _bleService.scanResults.listen((devices) {
+    _scanSub = _bluetoothService.scanResults.listen((devices) {
       _devices = devices;
       notifyListeners();
     });
@@ -29,20 +28,17 @@ class DeviceListProvider extends ChangeNotifier {
   Future<void> startScan() async {
     _errorMessage = null;
     _devices = [];
-    _isScanning = true;
     notifyListeners();
 
-    final success = await _bleService.startScan();
+    final success = await _bluetoothService.startScan();
     if (!success) {
       _errorMessage = '无法开始扫描，请检查蓝牙是否开启';
+      notifyListeners();
     }
-    _isScanning = false;
-    notifyListeners();
   }
 
   Future<void> stopScan() async {
-    await _bleService.stopScan();
-    _isScanning = false;
+    await _bluetoothService.stopScan();
     notifyListeners();
   }
 
@@ -54,7 +50,7 @@ class DeviceListProvider extends ChangeNotifier {
   @override
   void dispose() {
     _scanSub?.cancel();
-    _bleService.dispose();
+    _bluetoothService.dispose();
     super.dispose();
   }
 }
