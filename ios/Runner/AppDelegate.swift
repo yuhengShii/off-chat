@@ -56,7 +56,7 @@ import UIKit
     }
 
     gattServerEvents.setStreamHandler(GattServerStreamHandler(
-      onListen: { [weak self] eventSink in
+      onListen: { [weak self] (eventSink: @escaping FlutterEventSink) in
         self?.eventSink = eventSink
       },
       onCancel: { [weak self] in
