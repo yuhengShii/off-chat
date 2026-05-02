@@ -16,13 +16,17 @@ import UIKit
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
-    let messenger = engineBridge.pluginRegistry.methodChannelMessenger()
+    guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "Runner") else {
+      return
+    }
+    let messenger = registrar.messenger()
+
     let gattServerChannel = FlutterMethodChannel(name: "off_chat/ble_gatt_server", binaryMessenger: messenger)
     let gattServerEvents = FlutterEventChannel(name: "off_chat/ble_gatt_server_events", binaryMessenger: messenger)
 
     bleGattServer = BleGattServer()
 
-    gattServerChannel.setMethodCallHandler { [weak self] (call, result) in
+    gattServerChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
       switch call.method {
       case "initialize":
         if let sink = self?.eventSink {
@@ -51,10 +55,33 @@ import UIKit
       }
     }
 
-    gattServerEvents.setStreamHandler(StreamHandler { [weak self] (eventSink: @escaping FlutterEventSink) in
-      self?.eventSink = eventSink
-    } onCancel: { [weak self] in
-      self?.eventSink = nil
-    })
+    gattServerEvents.setStreamHandler(GattServerStreamHandler(
+      onListen: { [weak self] eventSink in
+        self?.eventSink = eventSink
+      },
+      onCancel: { [weak self] in
+        self?.eventSink = nil
+      }
+    ))
+  }
+}
+
+private class GattServerStreamHandler: NSObject, FlutterStreamHandler {
+  private let onListen: (FlutterEventSink) -> Void
+  private let onCancel: () -> Void
+
+  init(onListen: @escaping (FlutterEventSink) -> Void, onCancel: @escaping () -> Void) {
+    self.onListen = onListen
+    self.onCancel = onCancel
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    onListen(events)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    onCancel()
+    return nil
   }
 }
