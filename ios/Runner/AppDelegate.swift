@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, FlutterStreamHandler {
   var bleGattServer: BleGattServer?
   var eventSink: FlutterEventSink?
 
@@ -35,7 +35,7 @@ import UIKit
           result(false)
         }
       case "startAdvertising":
-        result(true) // iOS CBPeripheralManager starts advertising after service is added
+        result(true)
       case "stopAdvertising":
         self?.bleGattServer?.close()
         result(true)
@@ -55,33 +55,18 @@ import UIKit
       }
     }
 
-    gattServerEvents.setStreamHandler(GattServerStreamHandler(
-      onListen: { [weak self] (eventSink: @escaping FlutterEventSink) in
-        self?.eventSink = eventSink
-      },
-      onCancel: { [weak self] in
-        self?.eventSink = nil
-      }
-    ))
+    gattServerEvents.setStreamHandler(self)
   }
-}
 
-private class GattServerStreamHandler: NSObject, FlutterStreamHandler {
-  private let onListen: (FlutterEventSink) -> Void
-  private let onCancel: () -> Void
-
-  init(onListen: @escaping (FlutterEventSink) -> Void, onCancel: @escaping () -> Void) {
-    self.onListen = onListen
-    self.onCancel = onCancel
-  }
+  // MARK: - FlutterStreamHandler
 
   func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-    onListen(events)
+    eventSink = events
     return nil
   }
 
   func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    onCancel()
+    eventSink = nil
     return nil
   }
 }
